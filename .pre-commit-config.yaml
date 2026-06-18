@@ -15,15 +15,20 @@ repos:
     rev: v0.4.10
     hooks:
       - id: ruff
+        args: ["--fix"]
+
   - repo: local
     hooks:
       - id: block-internal-data
         name: Block internal NST data paths
-        entry: bash -c 'if git diff --cached --name-only | grep -E "^_internal/(?!PROJECT_CONTEXT\.md$)|nst-internal|newton-internal"; then echo "Blocked: internal-data path"; exit 1; fi'
+        entry: >-
+          bash -c 'if git diff --cached --name-only | grep -E "^_internal/|nst-internal|newton-internal" | grep -v -x "_internal/PROJECT_CONTEXT.md" | grep -q .; then echo "Blocked: internal-data path"; exit 1; fi'
         language: system
         pass_filenames: false
       - id: ascii-only
         name: Enforce ASCII-only in tracked text files
-        entry: bash -c 'BAD=$(git diff --cached --name-only --diff-filter=ACM | grep -E "\.(md|py|sh|yml|yaml|toml)$" | xargs -I{} grep -lP "[^\x00-\x7F]" {} 2>/dev/null || true); if [ -n "$BAD" ]; then echo "Non-ASCII chars in: $BAD"; exit 1; fi'
-        language: system
-        pass_filenames: false
+        entry: >-
+          python -c 'import sys; bad = [f for f in sys.argv[1:] if any(b > 127 for b in open(f, "rb").read())]; (print("Non-ASCII characters in:", bad) or sys.exit(1)) if bad else sys.exit(0)'
+        language: python
+        types: [text]
+        files: \.(md|py|sh|yml|yaml|toml)$

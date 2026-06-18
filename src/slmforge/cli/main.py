@@ -2,6 +2,7 @@
 
 Subcommands are stubbed for M1. Real implementations land in M7.
 """
+
 from __future__ import annotations
 
 import typer

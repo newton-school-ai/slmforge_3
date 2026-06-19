@@ -20,10 +20,9 @@ labels: []
 ```
 
 ## Acceptance Criteria
-- [ ] 
+- [ ]
 
 ## Branch name
 `feature/issue-N-short-name`
 
 ## Dependencies
-

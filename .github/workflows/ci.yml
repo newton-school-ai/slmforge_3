@@ -15,17 +15,11 @@ jobs:
 
       - name: ASCII-only check
         run: |
-          if grep -rPn '[^\x00-\x7F]' --include="*.md" --include="*.py" --include="*.sh" --include="*.yml" --include="*.yaml" --include="*.toml" . | grep -v '.git/'; then
-            echo "Non-ASCII characters found"
-            exit 1
-          fi
+          python -c "import os, sys; files = [f for f in os.popen('git ls-files').read().splitlines() if f.endswith(('.md', '.py', '.sh', '.yml', '.yaml', '.toml')) and os.path.exists(f)]; bad = [f for f in files if any(b >= 128 for b in open(f, 'rb').read())]; (print('Non-ASCII chars in:', bad) or sys.exit(1)) if bad else sys.exit(0)"
 
       - name: Internal-data path guard
         run: |
-          if find . -type f -path '*/_internal/*' ! -name 'PROJECT_CONTEXT.md' | grep -q .; then
-            echo "Forbidden file under _internal/"
-            exit 1
-          fi
+          python -c "import os, sys, re; files = os.popen('git ls-files').read().splitlines(); bad = [f for f in files if re.search(r'(_internal/(?!PROJECT_CONTEXT\.md$))|nst-internal|newton-internal', f)]; (print('Forbidden internal-data paths:', bad) or sys.exit(1)) if bad else sys.exit(0)"
 
   test:
     name: Lint + unit tests

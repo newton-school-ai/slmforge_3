@@ -19,11 +19,13 @@ repos:
     hooks:
       - id: block-internal-data
         name: Block internal NST data paths
-        entry: bash -c 'if git diff --cached --name-only | grep -E "^_internal/(?!PROJECT_CONTEXT\.md$)|nst-internal|newton-internal"; then echo "Blocked: internal-data path"; exit 1; fi'
+        entry: python -c "import os, sys, re; files = [f for f in sys.argv[1:] if os.path.exists(f)]; bad = [f for f in files if re.search(r'(_internal/(?!PROJECT_CONTEXT\.md$))|nst-internal|newton-internal', f)]; (print('Blocked internal-data path:', bad) or sys.exit(1)) if bad else sys.exit(0)"
         language: system
-        pass_filenames: false
+        files: _internal/|nst-internal|newton-internal
+        pass_filenames: true
       - id: ascii-only
         name: Enforce ASCII-only in tracked text files
-        entry: bash -c 'BAD=$(git diff --cached --name-only --diff-filter=ACM | grep -E "\.(md|py|sh|yml|yaml|toml)$" | xargs -I{} grep -lP "[^\x00-\x7F]" {} 2>/dev/null || true); if [ -n "$BAD" ]; then echo "Non-ASCII chars in: $BAD"; exit 1; fi'
+        entry: python -c "import os, sys; files = [f for f in sys.argv[1:] if os.path.exists(f)]; bad = [f for f in files if any(b >= 128 for b in open(f, 'rb').read())]; (print('Non-ASCII chars in:', bad) or sys.exit(1)) if bad else sys.exit(0)"
         language: system
-        pass_filenames: false
+        files: \.(md|py|sh|yml|yaml|toml)$
+        pass_filenames: true

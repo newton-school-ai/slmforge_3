@@ -1,4 +1,5 @@
 """FastAPI skeleton. Real endpoints land in M1 Issue 3 and beyond."""
+
 from __future__ import annotations
 
 from fastapi import FastAPI

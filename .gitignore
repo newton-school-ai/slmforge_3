@@ -46,3 +46,6 @@ htmlcov/
 
 # Bootstrap template (kept local, never pushed)
 CLAUDE.md
+
+# Local database
+*.db*.db

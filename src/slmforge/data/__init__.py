@@ -1,8 +1,8 @@
-"""slmforge.data – data loading, ingestion, and preview utilities."""
+"""slmforge.data - data loading, ingestion, and preview utilities."""
 
 from slmforge.data.ingest import (
-    FORMAT_JSONL,
     FORMAT_CSV,
+    FORMAT_JSONL,
     FORMAT_PARQUET,
     FORMAT_TXT_FOLDER,
     detect_format,

@@ -8,7 +8,7 @@ Supported formats
 - JSONL  (.jsonl)
 - CSV    (.csv)
 - Parquet (.parquet)
-- TXT folder – a directory whose files are all .txt
+- TXT folder - a directory whose files are all .txt
 
 Format detection
 ----------------
@@ -24,7 +24,6 @@ from __future__ import annotations
 
 import csv
 import json
-import os
 from pathlib import Path
 from typing import Any, Dict, Iterator
 
@@ -47,17 +46,17 @@ FORMAT_CSV = "csv"
 FORMAT_PARQUET = "parquet"
 FORMAT_TXT_FOLDER = "txt-folder"
 
-# MIME → format mapping (python-magic output)
+# MIME to format mapping (python-magic output)
 _MIME_TO_FORMAT: dict[str, str] = {
-    "application/json": FORMAT_JSONL,       # single-object JSON
-    "application/x-ndjson": FORMAT_JSONL,   # libmagic: "New Line Delimited JSON" = JSONL
+    "application/json": FORMAT_JSONL,  # single-object JSON
+    "application/x-ndjson": FORMAT_JSONL,  # libmagic: "New Line Delimited JSON" = JSONL
     "text/csv": FORMAT_CSV,
     "application/csv": FORMAT_CSV,
     "application/octet-stream": FORMAT_PARQUET,  # parquet has no standard MIME
     "application/vnd.apache.parquet": FORMAT_PARQUET,
 }
 
-# Extension → format mapping (fallback / directory check)
+# Extension to format mapping (fallback / directory check)
 _EXT_TO_FORMAT: dict[str, str] = {
     ".jsonl": FORMAT_JSONL,
     ".csv": FORMAT_CSV,
@@ -69,15 +68,17 @@ _EXT_TO_FORMAT: dict[str, str] = {
 # Format detection
 # ---------------------------------------------------------------------------
 
+
 def detect_format(path: str | Path) -> str:
     """Detect the data format of *path*.
 
     Strategy
     --------
-    1. If *path* is a directory → ``txt-folder``.
-    2. If ``python-magic`` is available, sniff the MIME type from the
-       first 2 048 bytes and map to a known format.
+    1. If *path* is a directory, return ``txt-folder``.
+    2. If ``python-magic`` is available, sniff the MIME type and map to a
+       known format.
     3. Fall back to the file extension.
+    4. Last resort: peek at the first 4 bytes for the Parquet magic ``PAR1``.
 
     Parameters
     ----------
@@ -96,22 +97,22 @@ def detect_format(path: str | Path) -> str:
     """
     p = Path(path)
 
-    # 1 – directory → txt-folder
+    # 1 - directory
     if p.is_dir():
         return FORMAT_TXT_FOLDER
 
-    # 2 – python-magic MIME sniffing
+    # 2 - python-magic MIME sniffing
     if _MAGIC_AVAILABLE:
         try:
             mime = _magic.from_file(str(p), mime=True)
-            # "text/plain" is ambiguous – refine with extension
+            # "text/plain" is ambiguous - refine with extension
             if mime == "text/plain":
                 ext = p.suffix.lower()
                 if ext == ".jsonl":
                     return FORMAT_JSONL
                 if ext == ".csv":
                     return FORMAT_CSV
-                # Unknown extension + text/plain → fall through; don't assume JSONL
+                # Unknown extension + text/plain: fall through; don't assume JSONL
             else:
                 fmt = _MIME_TO_FORMAT.get(mime)
                 if fmt:
@@ -119,12 +120,12 @@ def detect_format(path: str | Path) -> str:
         except Exception:
             pass  # fall through to extension fallback
 
-    # 3 – extension fallback
+    # 3 - extension fallback
     ext = p.suffix.lower()
     if ext in _EXT_TO_FORMAT:
         return _EXT_TO_FORMAT[ext]
 
-    # Last-resort: peek at file bytes to detect parquet magic bytes PAR1
+    # 4 - last-resort: peek at file bytes to detect parquet magic bytes PAR1
     try:
         with open(p, "rb") as fh:
             header = fh.read(4)
@@ -143,6 +144,7 @@ def detect_format(path: str | Path) -> str:
 # ---------------------------------------------------------------------------
 # Per-format readers
 # ---------------------------------------------------------------------------
+
 
 def read_jsonl(path: str | Path) -> Iterator[Dict[str, Any]]:
     """Yield one record per line from a JSONL file.
@@ -168,7 +170,7 @@ def read_csv(path: str | Path) -> Iterator[Dict[str, Any]]:
 
 def read_parquet(path: str | Path) -> Iterator[Dict[str, Any]]:
     """Yield one dict-per-row from a Parquet file using pyarrow."""
-    import pyarrow.parquet as pq  # lazy import – not required for other formats
+    import pyarrow.parquet as pq  # lazy import - not required for other formats
 
     table = pq.read_table(str(path))
     for batch in table.to_batches():
@@ -234,10 +236,7 @@ def load(path: str | Path, fmt: str | None = None) -> Iterator[Dict[str, Any]]:
 
     reader = _FORMAT_READERS.get(fmt)
     if reader is None:
-        raise ValueError(
-            f"Unsupported format '{fmt}'. "
-            f"Choose from: {list(_FORMAT_READERS)}"
-        )
+        raise ValueError(f"Unsupported format '{fmt}'. " f"Choose from: {list(_FORMAT_READERS)}")
 
     yield from reader(path)
 

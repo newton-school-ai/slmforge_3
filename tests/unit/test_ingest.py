@@ -1,7 +1,7 @@
 """
 tests/unit/test_ingest.py
 =========================
-Unit tests for Issue #6 – Multi-format ingestion.
+Unit tests for Issue #6 - Multi-format ingestion.
 
 Acceptance criteria covered
 ----------------------------
@@ -14,8 +14,6 @@ from __future__ import annotations
 
 import csv
 import json
-import os
-import tempfile
 from pathlib import Path
 from typing import List, Dict, Any
 
@@ -24,6 +22,7 @@ import pytest
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _write_jsonl(path: Path, records: List[Dict[str, Any]]) -> None:
     with path.open("w", encoding="utf-8") as fh:
@@ -64,10 +63,7 @@ def _write_txt_folder(folder: Path, texts: List[str]) -> None:
 # Fixtures
 # ---------------------------------------------------------------------------
 
-SAMPLE_RECORDS = [
-    {"id": i, "text": f"record {i}", "value": float(i) * 1.5}
-    for i in range(10)
-]
+SAMPLE_RECORDS = [{"id": i, "text": f"record {i}", "value": float(i) * 1.5} for i in range(10)]
 
 SAMPLE_TEXTS = [f"This is document number {i}." for i in range(10)]
 
@@ -269,14 +265,14 @@ class TestDetectFormat:
     # --- extension-missing detection (magic bytes / MIME sniffing) ---
 
     def test_detects_jsonl_without_extension(self, tmp: Path):
-        """JSONL file with no extension – detection via python-magic or byte peek."""
+        """JSONL file with no extension - detection via python-magic or byte peek."""
         from slmforge.data.ingest import detect_format, FORMAT_JSONL
 
         p = tmp / "no_ext_jsonl"
         _write_jsonl(p, SAMPLE_RECORDS[:2])
         # When magic is available it reads text/plain and we return jsonl
         # When magic is unavailable we fall through to byte scan which also
-        # won't match PAR1 → raises. But we want this to succeed when possible.
+        # won't match PAR1 -> raises. But we want this to succeed when possible.
         # The test should not fail if magic is unavailable (mark xfail in that case).
         from slmforge.data.ingest import _MAGIC_AVAILABLE
 
@@ -287,12 +283,12 @@ class TestDetectFormat:
         assert fmt == FORMAT_JSONL
 
     def test_detects_parquet_without_extension(self, tmp: Path):
-        """Parquet file without .parquet extension – detected via PAR1 magic bytes."""
+        """Parquet file without .parquet extension - detected via PAR1 magic bytes."""
         from slmforge.data.ingest import detect_format, FORMAT_PARQUET
 
         p = tmp / "no_ext_parquet"
         _write_parquet(p, SAMPLE_RECORDS[:2])
-        # Parquet files start with magic bytes b'PAR1' – detected in last-resort check
+        # Parquet files start with magic bytes b'PAR1' - detected in last-resort check
         assert detect_format(p) == FORMAT_PARQUET
 
     def test_raises_on_unknown_format(self, tmp: Path):
@@ -369,7 +365,7 @@ class TestLoad:
 
 
 # ===========================================================================
-# Tests: preview()  ← Acceptance Criterion 3
+# Tests: preview()  <- Acceptance Criterion 3
 # ===========================================================================
 
 

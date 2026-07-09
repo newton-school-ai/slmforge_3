@@ -23,6 +23,12 @@ repos:
         language: system
         files: _internal/|nst-internal|newton-internal
         pass_filenames: true
+      - id: block-internal-data-content
+        name: Block internal NST data in content
+        entry: python -c "import os, sys, re; exclude={'.gitignore', '.pre-commit-config.yaml', '.github/workflows/ci.yml', 'CONTRIBUTING.md', 'MILESTONES.md', 'GITHUB_ISSUES.md', 'POD_GUIDE.md', 'ISSUES_TRACKER.md', 'scripts/create_github_issues.sh', 'src/slmforge/data/source_guard.py', 'tests/unit/test_source_guard.py'}; files = [f for f in sys.argv[1:] if os.path.exists(f) and f not in exclude]; pat=re.compile(r'(_internal/(?!PROJECT_CONTEXT\.md))|nst-internal|newton-internal'); bad = [f for f in files if any(pat.search(line) for line in open(f, 'r', errors='ignore'))]; (print('Blocked internal-data found in content:', bad) or sys.exit(1)) if bad else sys.exit(0)"
+        language: system
+        types: [text]
+        pass_filenames: true
       - id: ascii-only
         name: Enforce ASCII-only in tracked text files
         entry: python -c "import os, sys; files = [f for f in sys.argv[1:] if os.path.exists(f)]; bad = [f for f in files if any(b >= 128 for b in open(f, 'rb').read())]; (print('Non-ASCII chars in:', bad) or sys.exit(1)) if bad else sys.exit(0)"

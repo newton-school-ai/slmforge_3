@@ -19,7 +19,6 @@ from slmforge.data.builder import DEFAULT_SEED, DatasetBuilder
 from slmforge.data.card import generate_card
 from slmforge.data.sources.base import Source
 
-
 # ---------------------------------------------------------------------------
 # Helpers -- stub sources for testing
 # ---------------------------------------------------------------------------

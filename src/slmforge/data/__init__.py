@@ -9,6 +9,8 @@ from slmforge.data.ingest import (
     load,
 )
 from slmforge.data.preview import preview, preview_info
+from slmforge.data.builder import DatasetBuilder
+from slmforge.data.card import generate_card
 
 __all__ = [
     "FORMAT_JSONL",
@@ -19,4 +21,6 @@ __all__ = [
     "load",
     "preview",
     "preview_info",
+    "DatasetBuilder",
+    "generate_card",
 ]

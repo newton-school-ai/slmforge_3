@@ -26,7 +26,7 @@ frontend/.vite/
 
 # SLMForge runtime outputs
 builds/
-data/
+/data/
 *.pkl
 *.pt
 *.safetensors

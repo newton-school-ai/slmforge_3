@@ -1,17 +1,21 @@
+```gitignore
 # Secrets and local state
+
 .env
 .env.*
 !.env.example
 
 # Private scope (kickoff context, planning docs)
+
 _internal/
 
 # Python
+
 __pycache__/
 *.py[cod]
-*$py.class
-.venv/
-.venv-*/
+*$py.class*
+*.venv/*
+*.venv-*/
 venv/
 *.egg-info/
 build/
@@ -20,24 +24,28 @@ dist/
 pip-wheel-metadata/
 
 # Node
+
 node_modules/
 frontend/dist/
 frontend/.vite/
 
 # SLMForge runtime outputs
+
 builds/
-data/
+/data/
 *.pkl
 *.pt
 *.safetensors
 
 # Test / coverage
+
 .pytest_cache/
 .coverage
 htmlcov/
 .tox/
 
 # OS / editor
+
 .DS_Store
 .idea/
 .vscode/
@@ -45,7 +53,11 @@ htmlcov/
 *.swo
 
 # Bootstrap template (kept local, never pushed)
+
 CLAUDE.md
 
 # Local database
-*.db*.db
+
+*.db
+*.db*
+```

@@ -12,6 +12,7 @@ _REGISTRY = {
     "internal": InternalSource,
 }
 
+
 def get_source_adapter(source_type: str) -> Type[Source]:
     if source_type not in _REGISTRY:
         raise ValueError(f"Unknown source type: {source_type}")

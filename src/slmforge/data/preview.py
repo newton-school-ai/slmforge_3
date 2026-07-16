@@ -14,7 +14,6 @@ from typing import Any, Dict, List
 
 from slmforge.data.ingest import load, detect_format
 
-
 _DEFAULT_N = 5
 
 

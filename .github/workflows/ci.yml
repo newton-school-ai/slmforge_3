@@ -34,8 +34,14 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
       - name: Install
         run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt
           pip install -e .
       - name: Lint

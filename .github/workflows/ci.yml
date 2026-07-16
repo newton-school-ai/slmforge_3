@@ -21,6 +21,10 @@ jobs:
         run: |
           python -c "import os, sys, re; files = os.popen('git ls-files').read().splitlines(); bad = [f for f in files if re.search(r'(_internal/(?!PROJECT_CONTEXT\.md$))|nst-internal|newton-internal', f)]; (print('Forbidden internal-data paths:', bad) or sys.exit(1)) if bad else sys.exit(0)"
 
+      - name: Internal-data content guard
+        run: |
+          python -c "import os, sys, re; exclude={'.gitignore', '.pre-commit-config.yaml', '.github/workflows/ci.yml', 'CONTRIBUTING.md', 'MILESTONES.md', 'GITHUB_ISSUES.md', 'POD_GUIDE.md', 'ISSUES_TRACKER.md', 'scripts/create_github_issues.sh', 'src/slmforge/data/source_guard.py', 'tests/unit/test_source_guard.py'}; files = [f for f in os.popen('git ls-files').read().splitlines() if os.path.exists(f) and f not in exclude and f.endswith(('.md', '.py', '.sh', '.yml', '.yaml', '.toml', '.txt'))]; pat=re.compile(r'(_internal/(?!PROJECT_CONTEXT\.md))|nst-internal|newton-internal'); bad = [f for f in files if any(pat.search(line) for line in open(f, 'r', errors='ignore'))]; (print('Forbidden internal-data content:', bad) or sys.exit(1)) if bad else sys.exit(0)"
+
   test:
     name: Lint + unit tests
     runs-on: ubuntu-latest
@@ -30,8 +34,14 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
       - name: Install
         run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install -r requirements.txt
           pip install -e .
       - name: Lint

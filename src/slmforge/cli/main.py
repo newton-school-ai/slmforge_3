@@ -1,13 +1,18 @@
-"""SLMForge CLI entrypoint.
-
-Subcommands are stubbed for M1. Real implementations land in M7.
-"""
+"""SLMForge CLI entrypoint."""
 
 from __future__ import annotations
 
 import typer
 
-app = typer.Typer(no_args_is_help=True, help="SLMForge -- plug-and-play SLM builder.")
+from slmforge.data.prefetch import prefetch
+
+app = typer.Typer(
+    no_args_is_help=True,
+    help="SLMForge -- plug-and-play SLM builder.",
+)
+
+data_app = typer.Typer(help="Dataset operations.")
+app.add_typer(data_app, name="data")
 
 
 @app.command()
@@ -53,6 +58,13 @@ def usage(build_id: str) -> None:
 def ui() -> None:
     """Launch the localhost web UI."""
     typer.echo("ui: not yet implemented (M7)")
+
+
+@data_app.command(name="prefetch")
+def prefetch_dataset(dataset_id: str) -> None:
+    """Download and cache a public dataset."""
+    path = prefetch(dataset_id)
+    typer.echo(f"Dataset cached at: {path}")
 
 
 if __name__ == "__main__":

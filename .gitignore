@@ -61,3 +61,6 @@ CLAUDE.md
 *.db
 *.db*
 ```
+
+
+.hf-cache/

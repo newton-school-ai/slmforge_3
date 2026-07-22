@@ -1,5 +1,4 @@
-import pytest
-from slmforge.task.detector import detect_task_type, analyze_schema_and_content
+from slmforge.task.detector import detect_task_type
 
 def test_detect_classification():
     data = [

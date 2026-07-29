@@ -131,7 +131,8 @@ def _get_keys_and_samples(
                 samples.append(rec)
                 if not keys:
                     keys.update(rec.keys())
-    except Exception:
+    except (TypeError, KeyError, IndexError) as exc:
+        logger.debug("Fast-path indexing failed, falling back to iteration: %s", exc)
         # Fallback to iteration
         for rec in records:
             if isinstance(rec, dict):

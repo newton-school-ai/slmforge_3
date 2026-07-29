@@ -24,8 +24,11 @@ from __future__ import annotations
 
 import csv
 import json
+import logging
 from pathlib import Path
 from typing import Any, Dict, Iterator
+
+logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
 # Optional python-magic import (graceful fallback)
@@ -34,7 +37,7 @@ try:
     import magic as _magic  # python-magic
 
     _MAGIC_AVAILABLE = True
-except Exception:  # ImportError or libmagic not found
+except (ImportError, OSError):  # libmagic shared library not installed
     _MAGIC_AVAILABLE = False
 
 
@@ -117,8 +120,8 @@ def detect_format(path: str | Path) -> str:
                 fmt = _MIME_TO_FORMAT.get(mime)
                 if fmt:
                     return fmt
-        except Exception:
-            pass  # fall through to extension fallback
+        except (OSError, ValueError) as exc:
+            logger.debug("python-magic MIME sniff failed, falling back to extension: %s", exc)
 
     # 3 - extension fallback
     ext = p.suffix.lower()

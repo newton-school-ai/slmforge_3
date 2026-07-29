@@ -1,6 +1,11 @@
+from __future__ import annotations
+
+import logging
 from pathlib import Path
 
 from datasets import load_dataset
+
+logger = logging.getLogger(__name__)
 
 CACHE_DIR = Path("data/cache")
 
@@ -33,8 +38,8 @@ def prefetch(dataset_id: str) -> Path:
 
     try:
         license_info = getattr(dataset.info, "license", "Unknown")
-    except Exception:
-        pass
+    except AttributeError:
+        logger.debug("dataset.info has no 'license' attribute; defaulting to 'Unknown'")
 
     # Write dataset attribution card
     card_path.write_text(

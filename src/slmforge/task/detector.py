@@ -57,20 +57,61 @@ ALL_TASK_TYPES = [CLASSIFICATION, SUMMARISATION, QA, INSTRUCTION, CHAT]
 
 # Verbs indicative of instructions
 INSTRUCTION_VERBS = {
-    "write", "explain", "summarize", "summarise", "translate", "generate",
-    "list", "create", "parse", "format", "find", "determine", "analyze",
-    "analyse", "calculate", "describe", "convert", "extract", "compare",
-    "classify", "evaluate", "predict", "correct", "rewrite", "extract"
+    "write",
+    "explain",
+    "summarize",
+    "summarise",
+    "translate",
+    "generate",
+    "list",
+    "create",
+    "parse",
+    "format",
+    "find",
+    "determine",
+    "analyze",
+    "analyse",
+    "calculate",
+    "describe",
+    "convert",
+    "extract",
+    "compare",
+    "classify",
+    "evaluate",
+    "predict",
+    "correct",
+    "rewrite",
+    "extract",
 }
 
 # Question words indicative of QA
 QUESTION_WORDS = {
-    "who", "what", "where", "when", "why", "how", "which", "whom", "whose",
-    "is", "are", "can", "do", "does", "did", "was", "were", "could", "should", "would"
+    "who",
+    "what",
+    "where",
+    "when",
+    "why",
+    "how",
+    "which",
+    "whom",
+    "whose",
+    "is",
+    "are",
+    "can",
+    "do",
+    "does",
+    "did",
+    "was",
+    "were",
+    "could",
+    "should",
+    "would",
 }
 
 
-def _get_keys_and_samples(records: Any, max_samples: int = 100) -> Tuple[List[str], List[Dict[str, Any]]]:
+def _get_keys_and_samples(
+    records: Any, max_samples: int = 100
+) -> Tuple[List[str], List[Dict[str, Any]]]:
     """Helper to extract unique keys and a subset of records from records input."""
     samples: List[Dict[str, Any]] = []
     keys: set[str] = set()
@@ -132,7 +173,7 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
             "task_type": INSTRUCTION,
             "confidence": 0.0,
             "alternatives": [],
-            "fallback_prompt": "No records found to analyze. Defaulting to 'instruction'."
+            "fallback_prompt": "No records found to analyze. Defaulting to 'instruction'.",
         }
 
     # Initialize scores for all task types
@@ -141,7 +182,7 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
         QA: 0.0,
         SUMMARISATION: 0.0,
         CLASSIFICATION: 0.0,
-        INSTRUCTION: 0.0
+        INSTRUCTION: 0.0,
     }
 
     # Lowercase keys for case-insensitive matching
@@ -150,9 +191,11 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
 
     # 1. Chat Heuristic
     # Look for list-of-dict conversation structures
-    has_chat_keys = any(w in lower_keys for w in ["messages", "conversations", "dialogue", "turns", "chat"])
+    has_chat_keys = any(
+        w in lower_keys for w in ["messages", "conversations", "dialogue", "turns", "chat"]
+    )
     is_chat_struct = False
-    
+
     for sample in samples:
         for key in keys:
             val = sample.get(key)
@@ -161,9 +204,11 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
                 if isinstance(elem, dict):
                     elem_keys = {ek.lower() for ek in elem.keys()}
                     # OpenAI (role, content), ShareGPT (from, value), or speaker/text
-                    if ({"role", "content"}.issubset(elem_keys) or 
-                        {"from", "value"}.issubset(elem_keys) or 
-                        {"speaker", "text"}.issubset(elem_keys)):
+                    if (
+                        {"role", "content"}.issubset(elem_keys)
+                        or {"from", "value"}.issubset(elem_keys)
+                        or {"speaker", "text"}.issubset(elem_keys)
+                    ):
                         is_chat_struct = True
                         break
         if is_chat_struct:
@@ -178,8 +223,15 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
 
     # 2. QA Heuristic
     q_keys = [key_map[k] for k in lower_keys if any(w in k for w in ["question", "query", "q"])]
-    a_keys = [key_map[k] for k in lower_keys if any(w in k for w in ["answer", "reply", "a"]) and not any(w in k for w in ["class", "label"])]
-    ctx_keys = [key_map[k] for k in lower_keys if any(w in k for w in ["context", "document", "passage"])]
+    a_keys = [
+        key_map[k]
+        for k in lower_keys
+        if any(w in k for w in ["answer", "reply", "a"])
+        and not any(w in k for w in ["class", "label"])
+    ]
+    ctx_keys = [
+        key_map[k] for k in lower_keys if any(w in k for w in ["context", "document", "passage"])
+    ]
 
     # If instruction and response are present but contain QA markers
     if not q_keys and "prompt" in lower_keys and "response" in lower_keys:
@@ -205,8 +257,12 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
         if q_vals:
             q_str_vals = [str(v).strip().lower() for v in q_vals]
             ends_with_q = sum(1 for v in q_str_vals if v.endswith("?"))
-            starts_with_q_word = sum(1 for v in q_str_vals if any(v.startswith(w + " ") or v.startswith(w + "'") for w in QUESTION_WORDS))
-            
+            starts_with_q_word = sum(
+                1
+                for v in q_str_vals
+                if any(v.startswith(w + " ") or v.startswith(w + "'") for w in QUESTION_WORDS)
+            )
+
             total_q_checks = len(q_vals)
             q_ratio = (ends_with_q + starts_with_q_word) / total_q_checks
             if q_ratio > 0.6:
@@ -217,8 +273,19 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
     scores[QA] = min(1.0, qa_base + qa_content_bonus)
 
     # 3. Summarisation Heuristic
-    doc_keys = [key_map[k] for k in lower_keys if any(w in k for w in ["document", "article", "text", "context", "body"])]
-    sum_keys = [key_map[k] for k in lower_keys if any(w in k for w in ["summary", "abstract", "headline", "title", "summarisation", "summarization"])]
+    doc_keys = [
+        key_map[k]
+        for k in lower_keys
+        if any(w in k for w in ["document", "article", "text", "context", "body"])
+    ]
+    sum_keys = [
+        key_map[k]
+        for k in lower_keys
+        if any(
+            w in k
+            for w in ["summary", "abstract", "headline", "title", "summarisation", "summarization"]
+        )
+    ]
 
     sum_base = 0.0
     if doc_keys and sum_keys:
@@ -258,7 +325,7 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
         all_ints = all(isinstance(v, (int, bool)) for v in vals)
         str_vals = [str(v) for v in vals]
         avg_len = sum(len(v) for v in str_vals) / len(str_vals) if str_vals else 0.0
-        
+
         # Filter out non-hashable values (lists, dicts) before creating the set
         hashable_vals = [v for v in vals if isinstance(v, (str, int, float, bool)) or v is None]
         unique_vals = set(hashable_vals)
@@ -270,8 +337,20 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
             # Constant value column, not a useful class target
             continue
 
-        is_label_key = any(w in key.lower() for w in ["label", "class", "category", "sentiment", "intent", "target", "classification", "y"])
-        
+        is_label_key = any(
+            w in key.lower()
+            for w in [
+                "label",
+                "class",
+                "category",
+                "sentiment",
+                "intent",
+                "target",
+                "classification",
+                "y",
+            ]
+        )
+
         c_score = 0.0
         # Determine if output behaves like discrete labels
         if all_ints and cardinality <= 20:
@@ -285,7 +364,7 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
                     c_score += 0.35
                 if cardinality == 2:
                     c_score += 0.05
-        
+
         # Avoid classification false positives for very small sample sets without clear label keys
         if len(samples) < 5 and not is_label_key:
             c_score = min(c_score, 0.3)
@@ -295,8 +374,15 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
     scores[CLASSIFICATION] = min(1.0, best_class_score)
 
     # 5. Instruction Heuristic
-    inst_keys = [key_map[k] for k in lower_keys if any(w in k for w in ["instruction", "prompt", "input"])]
-    out_keys = [key_map[k] for k in lower_keys if any(w in k for w in ["output", "response"]) and not any(w in k for w in ["class", "label"])]
+    inst_keys = [
+        key_map[k] for k in lower_keys if any(w in k for w in ["instruction", "prompt", "input"])
+    ]
+    out_keys = [
+        key_map[k]
+        for k in lower_keys
+        if any(w in k for w in ["output", "response"])
+        and not any(w in k for w in ["class", "label"])
+    ]
 
     inst_base = 0.0
     if inst_keys and out_keys:
@@ -310,7 +396,9 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
         inst_vals = [s.get(inst_key, "") for s in samples if s.get(inst_key) is not None]
         if inst_vals:
             inst_str_vals = [str(v).strip().lower() for v in inst_vals]
-            starts_with_verb = sum(1 for v in inst_str_vals if any(v.startswith(w + " ") for w in INSTRUCTION_VERBS))
+            starts_with_verb = sum(
+                1 for v in inst_str_vals if any(v.startswith(w + " ") for w in INSTRUCTION_VERBS)
+            )
             verb_ratio = starts_with_verb / len(inst_str_vals)
             if verb_ratio >= 0.2:
                 inst_content_bonus = 0.2
@@ -333,7 +421,7 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
     # Determine predicted task and alternatives
     sorted_scores = sorted(scores.items(), key=lambda item: item[1], reverse=True)
     predicted_task, confidence = sorted_scores[0]
-    
+
     # If confidence is 0.0, fall back to instruction
     if confidence == 0.0:
         predicted_task = INSTRUCTION
@@ -355,151 +443,5 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
         "task_type": predicted_task,
         "confidence": float(confidence),
         "alternatives": alternatives,
-        "fallback_prompt": fallback_prompt
-=======
-Task Type Detector Module
-
-This module provides heuristics for detecting the NLP task type based on schema shape and content features.
-The detector uses heuristics to identify task types from sample data in order to support a "just point at data" UX.
-
-Supported Task Types:
-- classification
-- summarisation
-- qa
-- instruction
-- chat
-
-Heuristics documented:
-- Classification: Looks for 'label', 'target', 'class', or 'category' columns. Boosts confidence if the number of unique labels is small.
-- Summarisation: Looks for 'summary' or 'abstract' columns alongside 'text', 'document', or 'article' columns. Boosts confidence if the source text is longer than the summary on average.
-- QA: Looks for 'question' and 'answer' columns. Presence of 'context' boosts confidence.
-- Instruction: Looks for 'instruction' and 'response' (or 'output') columns. Presence of 'input' boosts confidence.
-- Chat: Looks for 'messages' or 'conversations' columns. Boosts confidence if the content is a list of dicts with 'role' and 'content' keys.
-
-Returns:
-A dictionary containing:
-- 'task': Detected task type (str)
-- 'confidence': Confidence score between 0.0 and 1.0 (float)
-- 'alternatives': List of alternative tasks with their scores
-- 'fallback_prompt': A string containing a fallback prompt if confidence is low.
-"""
-
-from typing import List, Dict, Any
-
-TASK_TYPES = ["classification", "summarisation", "qa", "instruction", "chat"]
-
-
-def analyze_schema_and_content(sample_data: List[Dict[str, Any]]) -> Dict[str, float]:
-    """Scores different tasks based on sample data."""
-    scores = {t: 0.0 for t in TASK_TYPES}
-
-    if not sample_data:
-        return scores
-
-    keys = list(sample_data[0].keys())
-    key_lower = [str(k).lower() for k in keys]
-
-    # 1. Classification Heuristic
-    if any(k in key_lower for k in ["label", "target", "class", "category"]):
-        scores["classification"] += 0.6
-        label_key = next(
-            (k for k, kl in zip(keys, key_lower) if kl in ["label", "target", "class", "category"]),
-            None,
-        )
-        if label_key:
-            unique_labels = set(
-                str(row.get(label_key)) for row in sample_data if row.get(label_key) is not None
-            )
-            if 0 < len(unique_labels) <= 20:
-                scores["classification"] += 0.3
-
-    # 2. QA Heuristic
-    if "question" in key_lower and "answer" in key_lower:
-        scores["qa"] += 0.7
-        if "context" in key_lower:
-            scores["qa"] += 0.2
-
-    # 3. Summarisation Heuristic
-    if any(k in key_lower for k in ["summary", "abstract"]) and any(
-        k in key_lower for k in ["text", "document", "article"]
-    ):
-        scores["summarisation"] += 0.7
-
-        summary_key = next(
-            (k for k, kl in zip(keys, key_lower) if kl in ["summary", "abstract"]), None
-        )
-        text_key = next(
-            (k for k, kl in zip(keys, key_lower) if kl in ["text", "document", "article"]), None
-        )
-
-        if summary_key and text_key:
-            summary_len = sum(len(str(row.get(summary_key, ""))) for row in sample_data)
-            text_len = sum(len(str(row.get(text_key, ""))) for row in sample_data)
-
-            if text_len > summary_len and text_len > 0:
-                scores["summarisation"] += 0.2
-
-    # 4. Instruction Heuristic
-    if "instruction" in key_lower and ("response" in key_lower or "output" in key_lower):
-        scores["instruction"] += 0.7
-        if "input" in key_lower:
-            scores["instruction"] += 0.2
-
-    # 5. Chat Heuristic
-    if "messages" in key_lower or "conversations" in key_lower:
-        scores["chat"] += 0.7
-
-        msg_key = next(
-            (k for k, kl in zip(keys, key_lower) if kl in ["messages", "conversations"]), None
-        )
-        if msg_key:
-            sample_val = sample_data[0].get(msg_key)
-            if isinstance(sample_val, list) and len(sample_val) > 0:
-                if (
-                    isinstance(sample_val[0], dict)
-                    and "role" in sample_val[0]
-                    and "content" in sample_val[0]
-                ):
-                    scores["chat"] += 0.2
-
-    # Normalize scores between 0 and 1 (cap at 1.0) and round to 2 decimals
-    for k in scores:
-        scores[k] = round(min(1.0, scores[k]), 2)
-
-    return scores
-
-
-def detect_task_type(sample_data: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """
-    Detects the task type from a sample of data.
-
-    Args:
-        sample_data: A list of dictionaries representing the rows of the dataset.
-
-    Returns:
-        Dict containing task, confidence, alternatives, and fallback_prompt.
-    """
-    scores = analyze_schema_and_content(sample_data)
-
-    sorted_scores = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-    best_task, best_score = sorted_scores[0]
-
-    alternatives = [{"task": t, "confidence": s} for t, s in sorted_scores[1:] if s > 0]
-
-    fallback_prompt = None
-    if best_score < 0.6:
-        fallback_prompt = (
-            "Could not confidently determine the task type from the provided data schema. "
-            "Please explicitly specify the task type (e.g., classification, summarisation, qa, instruction, chat)."
-        )
-
-    if best_score == 0.0:
-        best_task = "unknown"
-
-    return {
-        "task": best_task,
-        "confidence": best_score,
-        "alternatives": alternatives,
         "fallback_prompt": fallback_prompt,
-dev
     }

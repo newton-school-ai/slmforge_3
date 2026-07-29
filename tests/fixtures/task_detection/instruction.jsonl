@@ -1,0 +1,6 @@
+{"instruction": "Write a Python function that checks if a given string is a palindrome.", "response": "def is_palindrome(s):\n    cleaned = ''.join(c.lower() for c in s if c.isalnum())\n    return cleaned == cleaned[::-1]"}
+{"instruction": "Explain how a search engine works under the hood.", "response": "A search engine works by crawling the web with bots, indexing the text of pages, and ranking results using algorithms like PageRank."}
+{"instruction": "List 5 healthy snacks that are easy to prepare at work.", "response": "1. Sliced apples with almond butter\n2. Mixed raw nuts\n3. Greek yogurt\n4. Baby carrots with hummus\n5. Rice cakes with avocado"}
+{"instruction": "Create a SQL query to find the second highest salary from an Employee table.", "response": "SELECT MAX(Salary) FROM Employee WHERE Salary < (SELECT MAX(Salary) FROM Employee);"}
+{"instruction": "Describe the main differences between relational and non-relational databases.", "response": "Relational databases use structured tables with schemas and SQL. Non-relational databases use flexible formats like document, key-value, or graph."}
+{"instruction": "Generate a short greeting email to a new client welcoming them to our platform.", "response": "Subject: Welcome to SLMForge!\n\nDear [Name],\n\nWe are thrilled to welcome you. Let us know if you have any questions!\n\nBest,\nThe Team"}

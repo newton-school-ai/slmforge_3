@@ -1,5 +1,4 @@
-"""
-tests/unit/test_ingest.py
+"""tests/unit/test_ingest.py.
 =========================
 Unit tests for Issue #6 - Multi-format ingestion.
 
@@ -14,23 +13,25 @@ from __future__ import annotations
 
 import csv
 import json
-from pathlib import Path
-from typing import List, Dict, Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
 
-def _write_jsonl(path: Path, records: List[Dict[str, Any]]) -> None:
+def _write_jsonl(path: Path, records: list[dict[str, Any]]) -> None:
     with path.open("w", encoding="utf-8") as fh:
         for rec in records:
             fh.write(json.dumps(rec) + "\n")
 
 
-def _write_csv(path: Path, records: List[Dict[str, Any]]) -> None:
+def _write_csv(path: Path, records: list[dict[str, Any]]) -> None:
     if not records:
         path.write_text("", encoding="utf-8")
         return
@@ -40,7 +41,7 @@ def _write_csv(path: Path, records: List[Dict[str, Any]]) -> None:
         writer.writerows(records)
 
 
-def _write_parquet(path: Path, records: List[Dict[str, Any]]) -> None:
+def _write_parquet(path: Path, records: list[dict[str, Any]]) -> None:
     import pyarrow as pa
     import pyarrow.parquet as pq
 
@@ -53,7 +54,7 @@ def _write_parquet(path: Path, records: List[Dict[str, Any]]) -> None:
     pq.write_table(table, str(path))
 
 
-def _write_txt_folder(folder: Path, texts: List[str]) -> None:
+def _write_txt_folder(folder: Path, texts: list[str]) -> None:
     folder.mkdir(parents=True, exist_ok=True)
     for i, text in enumerate(texts):
         (folder / f"file_{i:03d}.txt").write_text(text, encoding="utf-8")
@@ -68,7 +69,7 @@ SAMPLE_RECORDS = [{"id": i, "text": f"record {i}", "value": float(i) * 1.5} for 
 SAMPLE_TEXTS = [f"This is document number {i}." for i in range(10)]
 
 
-@pytest.fixture()
+@pytest.fixture
 def tmp(tmp_path: Path) -> Path:
     return tmp_path
 
@@ -79,7 +80,7 @@ def tmp(tmp_path: Path) -> Path:
 
 
 class TestReadJsonl:
-    def test_reads_all_records(self, tmp: Path):
+    def test_reads_all_records(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_jsonl
 
         p = tmp / "data.jsonl"
@@ -87,7 +88,7 @@ class TestReadJsonl:
         result = list(read_jsonl(p))
         assert len(result) == len(SAMPLE_RECORDS)
 
-    def test_record_content(self, tmp: Path):
+    def test_record_content(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_jsonl
 
         records = [{"question": "What is AI?", "answer": "Machine learning."}]
@@ -97,7 +98,7 @@ class TestReadJsonl:
         assert result[0]["question"] == "What is AI?"
         assert result[0]["answer"] == "Machine learning."
 
-    def test_skips_blank_lines(self, tmp: Path):
+    def test_skips_blank_lines(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_jsonl
 
         p = tmp / "with_blanks.jsonl"
@@ -105,7 +106,7 @@ class TestReadJsonl:
         result = list(read_jsonl(p))
         assert len(result) == 2
 
-    def test_returns_dicts(self, tmp: Path):
+    def test_returns_dicts(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_jsonl
 
         p = tmp / "types.jsonl"
@@ -115,7 +116,7 @@ class TestReadJsonl:
 
 
 class TestReadCsv:
-    def test_reads_all_records(self, tmp: Path):
+    def test_reads_all_records(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_csv
 
         p = tmp / "data.csv"
@@ -123,7 +124,7 @@ class TestReadCsv:
         result = list(read_csv(p))
         assert len(result) == len(SAMPLE_RECORDS)
 
-    def test_column_names_preserved(self, tmp: Path):
+    def test_column_names_preserved(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_csv
 
         p = tmp / "cols.csv"
@@ -131,7 +132,7 @@ class TestReadCsv:
         result = list(read_csv(p))
         assert set(result[0].keys()) == {"id", "text", "value"}
 
-    def test_returns_dicts(self, tmp: Path):
+    def test_returns_dicts(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_csv
 
         p = tmp / "types.csv"
@@ -141,7 +142,7 @@ class TestReadCsv:
 
 
 class TestReadParquet:
-    def test_reads_all_records(self, tmp: Path):
+    def test_reads_all_records(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_parquet
 
         p = tmp / "data.parquet"
@@ -149,7 +150,7 @@ class TestReadParquet:
         result = list(read_parquet(p))
         assert len(result) == len(SAMPLE_RECORDS)
 
-    def test_record_values(self, tmp: Path):
+    def test_record_values(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_parquet
 
         records = [{"name": "Alice", "score": 42}]
@@ -159,7 +160,7 @@ class TestReadParquet:
         assert result[0]["name"] == "Alice"
         assert result[0]["score"] == 42
 
-    def test_returns_dicts(self, tmp: Path):
+    def test_returns_dicts(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_parquet
 
         p = tmp / "types.parquet"
@@ -169,7 +170,7 @@ class TestReadParquet:
 
 
 class TestReadTxtFolder:
-    def test_reads_all_txt_files(self, tmp: Path):
+    def test_reads_all_txt_files(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_txt_folder
 
         folder = tmp / "docs"
@@ -177,7 +178,7 @@ class TestReadTxtFolder:
         result = list(read_txt_folder(folder))
         assert len(result) == len(SAMPLE_TEXTS)
 
-    def test_record_has_text_key(self, tmp: Path):
+    def test_record_has_text_key(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_txt_folder
 
         folder = tmp / "docs"
@@ -186,7 +187,7 @@ class TestReadTxtFolder:
         assert "text" in result[0]
         assert result[0]["text"] == "hello world"
 
-    def test_record_has_source_file_key(self, tmp: Path):
+    def test_record_has_source_file_key(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_txt_folder
 
         folder = tmp / "docs"
@@ -194,7 +195,7 @@ class TestReadTxtFolder:
         result = list(read_txt_folder(folder))
         assert "source_file" in result[0]
 
-    def test_non_txt_files_skipped(self, tmp: Path):
+    def test_non_txt_files_skipped(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_txt_folder
 
         folder = tmp / "mixed"
@@ -206,7 +207,7 @@ class TestReadTxtFolder:
         assert len(result) == 1
         assert result[0]["text"] == "keep"
 
-    def test_sorted_order(self, tmp: Path):
+    def test_sorted_order(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_txt_folder
 
         folder = tmp / "sorted"
@@ -217,7 +218,7 @@ class TestReadTxtFolder:
         assert result[0]["text"] == "first"
         assert result[1]["text"] == "last"
 
-    def test_raises_on_non_directory(self, tmp: Path):
+    def test_raises_on_non_directory(self, tmp: Path) -> None:
         from slmforge.data.ingest import read_txt_folder
 
         f = tmp / "not_a_dir.txt"
@@ -234,29 +235,29 @@ class TestReadTxtFolder:
 class TestDetectFormat:
     # --- extension-based detection ---
 
-    def test_detects_jsonl_by_extension(self, tmp: Path):
-        from slmforge.data.ingest import detect_format, FORMAT_JSONL
+    def test_detects_jsonl_by_extension(self, tmp: Path) -> None:
+        from slmforge.data.ingest import FORMAT_JSONL, detect_format
 
         p = tmp / "data.jsonl"
         _write_jsonl(p, SAMPLE_RECORDS[:2])
         assert detect_format(p) == FORMAT_JSONL
 
-    def test_detects_csv_by_extension(self, tmp: Path):
-        from slmforge.data.ingest import detect_format, FORMAT_CSV
+    def test_detects_csv_by_extension(self, tmp: Path) -> None:
+        from slmforge.data.ingest import FORMAT_CSV, detect_format
 
         p = tmp / "data.csv"
         _write_csv(p, SAMPLE_RECORDS[:2])
         assert detect_format(p) == FORMAT_CSV
 
-    def test_detects_parquet_by_extension(self, tmp: Path):
-        from slmforge.data.ingest import detect_format, FORMAT_PARQUET
+    def test_detects_parquet_by_extension(self, tmp: Path) -> None:
+        from slmforge.data.ingest import FORMAT_PARQUET, detect_format
 
         p = tmp / "data.parquet"
         _write_parquet(p, SAMPLE_RECORDS[:2])
         assert detect_format(p) == FORMAT_PARQUET
 
-    def test_detects_txt_folder(self, tmp: Path):
-        from slmforge.data.ingest import detect_format, FORMAT_TXT_FOLDER
+    def test_detects_txt_folder(self, tmp: Path) -> None:
+        from slmforge.data.ingest import FORMAT_TXT_FOLDER, detect_format
 
         folder = tmp / "docs"
         _write_txt_folder(folder, ["hello"])
@@ -264,9 +265,9 @@ class TestDetectFormat:
 
     # --- extension-missing detection (magic bytes / MIME sniffing) ---
 
-    def test_detects_jsonl_without_extension(self, tmp: Path):
+    def test_detects_jsonl_without_extension(self, tmp: Path) -> None:
         """JSONL file with no extension - detection via python-magic or byte peek."""
-        from slmforge.data.ingest import detect_format, FORMAT_JSONL
+        from slmforge.data.ingest import FORMAT_JSONL, detect_format
 
         p = tmp / "no_ext_jsonl"
         _write_jsonl(p, SAMPLE_RECORDS[:2])
@@ -282,16 +283,16 @@ class TestDetectFormat:
         fmt = detect_format(p)
         assert fmt == FORMAT_JSONL
 
-    def test_detects_parquet_without_extension(self, tmp: Path):
+    def test_detects_parquet_without_extension(self, tmp: Path) -> None:
         """Parquet file without .parquet extension - detected via PAR1 magic bytes."""
-        from slmforge.data.ingest import detect_format, FORMAT_PARQUET
+        from slmforge.data.ingest import FORMAT_PARQUET, detect_format
 
         p = tmp / "no_ext_parquet"
         _write_parquet(p, SAMPLE_RECORDS[:2])
         # Parquet files start with magic bytes b'PAR1' - detected in last-resort check
         assert detect_format(p) == FORMAT_PARQUET
 
-    def test_raises_on_unknown_format(self, tmp: Path):
+    def test_raises_on_unknown_format(self, tmp: Path) -> None:
         from slmforge.data.ingest import detect_format
 
         p = tmp / "mystery.xyz"
@@ -306,7 +307,7 @@ class TestDetectFormat:
 
 
 class TestLoad:
-    def test_load_jsonl(self, tmp: Path):
+    def test_load_jsonl(self, tmp: Path) -> None:
         from slmforge.data.ingest import load
 
         p = tmp / "data.jsonl"
@@ -314,7 +315,7 @@ class TestLoad:
         result = list(load(p))
         assert len(result) == len(SAMPLE_RECORDS)
 
-    def test_load_csv(self, tmp: Path):
+    def test_load_csv(self, tmp: Path) -> None:
         from slmforge.data.ingest import load
 
         p = tmp / "data.csv"
@@ -322,7 +323,7 @@ class TestLoad:
         result = list(load(p))
         assert len(result) == len(SAMPLE_RECORDS)
 
-    def test_load_parquet(self, tmp: Path):
+    def test_load_parquet(self, tmp: Path) -> None:
         from slmforge.data.ingest import load
 
         p = tmp / "data.parquet"
@@ -330,7 +331,7 @@ class TestLoad:
         result = list(load(p))
         assert len(result) == len(SAMPLE_RECORDS)
 
-    def test_load_txt_folder(self, tmp: Path):
+    def test_load_txt_folder(self, tmp: Path) -> None:
         from slmforge.data.ingest import load
 
         folder = tmp / "docs"
@@ -338,8 +339,8 @@ class TestLoad:
         result = list(load(folder))
         assert len(result) == len(SAMPLE_TEXTS)
 
-    def test_load_with_explicit_fmt(self, tmp: Path):
-        from slmforge.data.ingest import load, FORMAT_JSONL
+    def test_load_with_explicit_fmt(self, tmp: Path) -> None:
+        from slmforge.data.ingest import FORMAT_JSONL, load
 
         # File has wrong extension, but we explicitly pass fmt
         p = tmp / "tricky.txt"
@@ -347,7 +348,7 @@ class TestLoad:
         result = list(load(p, fmt=FORMAT_JSONL))
         assert len(result) == 3
 
-    def test_load_raises_on_unknown_fmt(self, tmp: Path):
+    def test_load_raises_on_unknown_fmt(self, tmp: Path) -> None:
         from slmforge.data.ingest import load
 
         p = tmp / "data.jsonl"
@@ -355,7 +356,7 @@ class TestLoad:
         with pytest.raises(ValueError, match="Unsupported format"):
             list(load(p, fmt="orc"))
 
-    def test_load_yields_dicts(self, tmp: Path):
+    def test_load_yields_dicts(self, tmp: Path) -> None:
         from slmforge.data.ingest import load
 
         p = tmp / "data.jsonl"
@@ -370,7 +371,7 @@ class TestLoad:
 
 
 class TestPreview:
-    def test_returns_first_5_records_by_default(self, tmp: Path):
+    def test_returns_first_5_records_by_default(self, tmp: Path) -> None:
         """AC: Sample preview returns first 5 records."""
         from slmforge.data.preview import preview
 
@@ -379,7 +380,7 @@ class TestPreview:
         result = preview(p)
         assert len(result) == 5
 
-    def test_returns_first_5_for_csv(self, tmp: Path):
+    def test_returns_first_5_for_csv(self, tmp: Path) -> None:
         from slmforge.data.preview import preview
 
         p = tmp / "data.csv"
@@ -387,7 +388,7 @@ class TestPreview:
         result = preview(p)
         assert len(result) == 5
 
-    def test_returns_first_5_for_parquet(self, tmp: Path):
+    def test_returns_first_5_for_parquet(self, tmp: Path) -> None:
         from slmforge.data.preview import preview
 
         p = tmp / "data.parquet"
@@ -395,7 +396,7 @@ class TestPreview:
         result = preview(p)
         assert len(result) == 5
 
-    def test_returns_first_5_for_txt_folder(self, tmp: Path):
+    def test_returns_first_5_for_txt_folder(self, tmp: Path) -> None:
         from slmforge.data.preview import preview
 
         folder = tmp / "docs"
@@ -403,7 +404,7 @@ class TestPreview:
         result = preview(folder)
         assert len(result) == 5
 
-    def test_custom_n(self, tmp: Path):
+    def test_custom_n(self, tmp: Path) -> None:
         from slmforge.data.preview import preview
 
         p = tmp / "data.jsonl"
@@ -411,7 +412,7 @@ class TestPreview:
         result = preview(p, n=3)
         assert len(result) == 3
 
-    def test_n_larger_than_dataset(self, tmp: Path):
+    def test_n_larger_than_dataset(self, tmp: Path) -> None:
         from slmforge.data.preview import preview
 
         p = tmp / "data.jsonl"
@@ -420,7 +421,7 @@ class TestPreview:
         result = preview(p, n=10)
         assert len(result) == 2  # only 2 records exist
 
-    def test_returns_list_of_dicts(self, tmp: Path):
+    def test_returns_list_of_dicts(self, tmp: Path) -> None:
         from slmforge.data.preview import preview
 
         p = tmp / "data.jsonl"
@@ -430,7 +431,7 @@ class TestPreview:
         for rec in result:
             assert isinstance(rec, dict)
 
-    def test_n_must_be_positive(self, tmp: Path):
+    def test_n_must_be_positive(self, tmp: Path) -> None:
         from slmforge.data.preview import preview
 
         p = tmp / "data.jsonl"
@@ -438,7 +439,7 @@ class TestPreview:
         with pytest.raises(ValueError):
             preview(p, n=0)
 
-    def test_records_are_from_beginning(self, tmp: Path):
+    def test_records_are_from_beginning(self, tmp: Path) -> None:
         """The first record returned must be the first record in the file."""
         from slmforge.data.preview import preview
 
@@ -451,7 +452,7 @@ class TestPreview:
 
 
 class TestPreviewInfo:
-    def test_returns_dict_with_required_keys(self, tmp: Path):
+    def test_returns_dict_with_required_keys(self, tmp: Path) -> None:
         from slmforge.data.preview import preview_info
 
         p = tmp / "data.jsonl"
@@ -462,16 +463,16 @@ class TestPreviewInfo:
         assert "n_returned" in info
         assert "records" in info
 
-    def test_format_field_correct(self, tmp: Path):
-        from slmforge.data.preview import preview_info
+    def test_format_field_correct(self, tmp: Path) -> None:
         from slmforge.data.ingest import FORMAT_JSONL
+        from slmforge.data.preview import preview_info
 
         p = tmp / "data.jsonl"
         _write_jsonl(p, SAMPLE_RECORDS)
         info = preview_info(p)
         assert info["format"] == FORMAT_JSONL
 
-    def test_n_returned_matches_records_length(self, tmp: Path):
+    def test_n_returned_matches_records_length(self, tmp: Path) -> None:
         from slmforge.data.preview import preview_info
 
         p = tmp / "data.jsonl"

@@ -1,5 +1,4 @@
-"""
-tests/integration/test_task_detector_regression.py
+"""tests/integration/test_task_detector_regression.py.
 ==================================================
 
 Regression suite for Task Detector. Loads labeled samples from `tests/fixtures/task_detection/`
@@ -12,12 +11,12 @@ import json
 from pathlib import Path
 
 from slmforge.task import (
-    detect_task,
-    CLASSIFICATION,
-    SUMMARISATION,
-    QA,
-    INSTRUCTION,
     CHAT,
+    CLASSIFICATION,
+    INSTRUCTION,
+    QA,
+    SUMMARISATION,
+    detect_task,
 )
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures" / "task_detection"
@@ -36,7 +35,7 @@ def test_detector_regression_accuracy() -> None:
 
         # Load records
         records = []
-        with open(fixture_path, "r", encoding="utf-8") as f:
+        with open(fixture_path, encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -57,15 +56,9 @@ def test_detector_regression_accuracy() -> None:
                 correct_samples += 1
             else:
                 # Log incorrect prediction for debugging/transparency
-                print(
-                    f"[Mismatch] Expected {task_type}, predicted {res['task_type']} for record: {record}"
-                )
+                pass
 
     accuracy = correct_samples / total_samples
-    print("\nTask Detector Regression Summary:")
-    print(f"Total samples: {total_samples}")
-    print(f"Correct: {correct_samples}")
-    print(f"Accuracy: {accuracy:.2%}")
 
     assert total_samples >= 30, f"Expected at least 30 labeled samples, found {total_samples}"
     assert accuracy >= 0.85, f"Task detector accuracy fell below 85% threshold. Got: {accuracy:.2%}"

@@ -1,6 +1,4 @@
-"""
-tests/unit/test_task_detector.py
-
+"""tests/unit/test_task_detector.py.
 
 Unit tests for the Task Detector (`src/slmforge/task/detector.py`).
 """
@@ -8,12 +6,12 @@ Unit tests for the Task Detector (`src/slmforge/task/detector.py`).
 from __future__ import annotations
 
 from slmforge.task import (
-    detect_task,
-    CLASSIFICATION,
-    SUMMARISATION,
-    QA,
-    INSTRUCTION,
     CHAT,
+    CLASSIFICATION,
+    INSTRUCTION,
+    QA,
+    SUMMARISATION,
+    detect_task,
 )
 
 
@@ -24,13 +22,13 @@ def test_detect_chat() -> None:
             "messages": [
                 {"role": "user", "content": "What is the capital of France?"},
                 {"role": "assistant", "content": "Paris is the capital of France."},
-            ]
+            ],
         },
         {
             "messages": [
                 {"role": "user", "content": "Hello"},
                 {"role": "assistant", "content": "Hi there!"},
-            ]
+            ],
         },
     ]
     res = detect_task(chat_records_openai)
@@ -44,8 +42,8 @@ def test_detect_chat() -> None:
             "conversations": [
                 {"from": "human", "value": "What is the capital of France?"},
                 {"from": "gpt", "value": "Paris."},
-            ]
-        }
+            ],
+        },
     ]
     res2 = detect_task(chat_records_sharegpt)
     assert res2["task_type"] == CHAT

@@ -131,6 +131,7 @@ curl http://localhost:8000/v1/chat/completions \
 From Python (drop into existing OpenAI client code by changing one line):
 ```python
 from openai import OpenAI
+
 client = OpenAI(base_url="http://localhost:8000/v1", api_key="not-needed")
 resp = client.chat.completions.create(
     model="<build_id>",

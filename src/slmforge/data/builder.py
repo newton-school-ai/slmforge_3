@@ -1,5 +1,4 @@
-"""
-src/slmforge/data/builder.py
+"""src/slmforge/data/builder.py.
 =============================
 Dataset builder with deterministic seeded splits.
 
@@ -9,11 +8,12 @@ Merges records from one or more ``Source`` adapters into a HuggingFace
 
 from __future__ import annotations
 
-from typing import List
+from typing import TYPE_CHECKING
 
 import datasets
 
-from slmforge.data.sources.base import Source
+if TYPE_CHECKING:
+    from slmforge.data.sources.base import Source
 
 # Default random seed for reproducible splits.
 DEFAULT_SEED: int = 42
@@ -35,7 +35,7 @@ class DatasetBuilder:
 
     @staticmethod
     def build(
-        sources: List[Source],
+        sources: list[Source],
         seed: int = DEFAULT_SEED,
     ) -> datasets.DatasetDict:
         """Merge *sources* and split into train / val / eval.
@@ -58,20 +58,22 @@ class DatasetBuilder:
         ------
         ValueError
             When *sources* is empty or yields zero records.
+
         """
         if not sources:
-            raise ValueError("At least one Source must be provided.")
+            msg = "At least one Source must be provided."
+            raise ValueError(msg)
 
         # ------------------------------------------------------------------
         # 1. Collect all records from every source
         # ------------------------------------------------------------------
         all_records: list[dict] = []
         for src in sources:
-            for record in src.iter_records():
-                all_records.append(record)
+            all_records.extend(src.iter_records())
 
         if not all_records:
-            raise ValueError("Sources yielded zero records.  Cannot build dataset from empty data.")
+            msg = "Sources yielded zero records.  Cannot build dataset from empty data."
+            raise ValueError(msg)
 
         # ------------------------------------------------------------------
         # 2. Create a HuggingFace Dataset from the flat list of dicts
@@ -107,8 +109,8 @@ class DatasetBuilder:
                 "train": train_ds,
                 "val": val_ds,
                 "eval": eval_ds,
-            }
+            },
         )
 
 
-__all__ = ["DatasetBuilder", "DEFAULT_SEED"]
+__all__ = ["DEFAULT_SEED", "DatasetBuilder"]

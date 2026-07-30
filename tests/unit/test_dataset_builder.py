@@ -1,5 +1,4 @@
-"""
-tests/unit/test_dataset_builder.py
+"""tests/unit/test_dataset_builder.py.
 ===================================
 Unit tests for DatasetBuilder (seeded 80/10/10 splits) and dataset card
 generation.
@@ -10,7 +9,7 @@ Run with:
 
 from __future__ import annotations
 
-from typing import Any, Dict, Iterator, List
+from typing import TYPE_CHECKING, Any
 
 import datasets
 import pytest
@@ -18,6 +17,9 @@ import pytest
 from slmforge.data.builder import DEFAULT_SEED, DatasetBuilder
 from slmforge.data.card import generate_card
 from slmforge.data.sources.base import Source
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 # ---------------------------------------------------------------------------
 # Helpers -- stub sources for testing
@@ -40,11 +42,11 @@ class StubSource(Source):
         self._id = source_id
         self._licence = licence
 
-    def iter_records(self) -> Iterator[Dict[str, Any]]:
+    def iter_records(self) -> Iterator[dict[str, Any]]:
         for i in range(self._n):
             yield {"text": f"{self._id}-record-{i}", "idx": i}
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         return {
             "type": self._type,
             "id": self._id,
@@ -56,10 +58,10 @@ class StubSource(Source):
 class EmptySource(Source):
     """A source that yields zero records."""
 
-    def iter_records(self) -> Iterator[Dict[str, Any]]:
+    def iter_records(self) -> Iterator[dict[str, Any]]:
         return iter([])
 
-    def metadata(self) -> Dict[str, Any]:
+    def metadata(self) -> dict[str, Any]:
         return {"type": "empty"}
 
 
@@ -83,7 +85,7 @@ class TestDatasetBuilderBuild:
 
     def test_same_seed_same_splits(self) -> None:
         """Two calls with the same seed must produce identical splits."""
-        sources: List[Source] = [StubSource(200)]
+        sources: list[Source] = [StubSource(200)]
         dd1 = DatasetBuilder.build(sources, seed=42)
         dd2 = DatasetBuilder.build(sources, seed=42)
 
@@ -92,7 +94,7 @@ class TestDatasetBuilderBuild:
 
     def test_different_seed_different_splits(self) -> None:
         """Two calls with different seeds should (almost certainly) differ."""
-        sources: List[Source] = [StubSource(200)]
+        sources: list[Source] = [StubSource(200)]
         dd1 = DatasetBuilder.build(sources, seed=42)
         dd2 = DatasetBuilder.build(sources, seed=99)
 
@@ -138,7 +140,7 @@ class TestDatasetBuilderBuild:
 
     def test_no_eval_leak_multiple_sources(self) -> None:
         """No eval leak when merging multiple sources."""
-        sources: List[Source] = [
+        sources: list[Source] = [
             StubSource(200, source_type="a", source_id="a-1"),
             StubSource(300, source_type="b", source_id="b-1"),
         ]
@@ -184,10 +186,10 @@ class TestDatasetBuilderBuild:
 class TestGenerateCard:
     """Tests for the generate_card() function."""
 
-    @pytest.fixture()
+    @pytest.fixture
     def card_fixture(self) -> tuple[str, list[Source]]:
         """Build a dataset and generate the card for reuse."""
-        sources: List[Source] = [
+        sources: list[Source] = [
             StubSource(80, source_type="public", source_id="squad", licence="CC-BY-4.0"),
             StubSource(20, source_type="synthetic", source_id="synth-v1", licence="Apache-2.0"),
         ]
@@ -227,7 +229,8 @@ class TestGenerateCard:
         assert "100" in card  # total = 80 + 20
 
     def test_card_contains_reproducibility_note(
-        self, card_fixture: tuple[str, list[Source]]
+        self,
+        card_fixture: tuple[str, list[Source]],
     ) -> None:
         card, _ = card_fixture
         assert "deterministic" in card.lower() or "reproducib" in card.lower()

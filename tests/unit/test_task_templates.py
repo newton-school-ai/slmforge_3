@@ -1,5 +1,4 @@
-"""
-tests/unit/test_task_templates.py
+"""tests/unit/test_task_templates.py.
 ==================================
 Unit tests for task templates, prompt rendering, and roundtrip parsing.
 """
@@ -10,11 +9,11 @@ import pytest
 
 from slmforge.task import (
     CLASSIFICATION,
-    ClassificationTemplate,
-    SummarisationTemplate,
-    QATemplate,
-    InstructionTemplate,
     ChatTemplate,
+    ClassificationTemplate,
+    InstructionTemplate,
+    QATemplate,
+    SummarisationTemplate,
     render_record,
     strip_record,
 )
@@ -164,7 +163,7 @@ def test_chat_template_roundtrip(format_type: str) -> None:
             {"role": "assistant", "content": "A number divisible only by 1 and itself."},
             {"role": "user", "content": "Is 2 prime?"},
             {"role": "assistant", "content": "Yes, 2 is the only even prime number."},
-        ]
+        ],
     }
     template = ChatTemplate()
     prompt, target = template.render(record_openai, format_type)
@@ -177,7 +176,7 @@ def test_chat_template_roundtrip(format_type: str) -> None:
             {"from": "system", "value": "You are a translator."},
             {"from": "human", "value": "Hello"},
             {"from": "gpt", "value": "Bonjour"},
-        ]
+        ],
     }
     template_sgpt = ChatTemplate()
     prompt_s, target_s = template_sgpt.render(record_sharegpt, format_type)
@@ -189,7 +188,7 @@ def test_chat_template_roundtrip(format_type: str) -> None:
         "turns": [
             {"speaker": "user", "text": "Hi"},
             {"speaker": "assistant", "text": "Hello, how can I help?"},
-        ]
+        ],
     }
     template_speaker = ChatTemplate()
     prompt_sp, target_sp = template_speaker.render(record_speaker, format_type)

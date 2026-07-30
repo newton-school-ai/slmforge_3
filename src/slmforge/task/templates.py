@@ -1,5 +1,4 @@
-"""
-src/slmforge/task/templates.py
+"""src/slmforge/task/templates.py.
 =============================
 Canonical templates and formatting utilities for different task types.
 """
@@ -10,16 +9,18 @@ import re
 from typing import Any
 
 from slmforge.task.detector import (
-    CLASSIFICATION,
-    SUMMARISATION,
-    QA,
-    INSTRUCTION,
     CHAT,
+    CLASSIFICATION,
+    INSTRUCTION,
+    QA,
+    SUMMARISATION,
 )
 
 
 def _find_key(
-    keys: list[str], candidates: list[str], exclude: list[str] | None = None
+    keys: list[str],
+    candidates: list[str],
+    exclude: list[str] | None = None,
 ) -> str | None:
     """Helper to find first matching key in record from candidates list, excluding specific keys."""
     exclude = exclude or []
@@ -44,12 +45,14 @@ def render_messages(messages: list[dict[str, str]], format_type: str) -> tuple[s
     -------
     tuple[str, str]
         A tuple of (prompt, target).
+
     """
     if not messages:
         return "", ""
 
     if messages[-1]["role"] != "assistant":
-        raise ValueError("The last message must be from the assistant to generate a target.")
+        msg = "The last message must be from the assistant to generate a target."
+        raise ValueError(msg)
 
     prompt_msgs = messages[:-1]
     target_msg = messages[-1]
@@ -73,7 +76,8 @@ def render_messages(messages: list[dict[str, str]], format_type: str) -> tuple[s
         target = f"{target_msg['content']}<|eot_id|>"
 
     else:
-        raise ValueError(f"Unsupported format_type: {format_type}")
+        msg_0 = f"Unsupported format_type: {format_type}"
+        raise ValueError(msg_0)
 
     return prompt, target
 
@@ -94,6 +98,7 @@ def strip_messages(prompt: str, target: str, format_type: str) -> list[dict[str,
     -------
     list[dict[str, str]]
         A list of message dictionaries, each containing "role" and "content".
+
     """
     full_text = prompt + target
 
@@ -102,9 +107,8 @@ def strip_messages(prompt: str, target: str, format_type: str) -> list[dict[str,
         matches = pattern.findall(full_text)
         return [{"role": r, "content": c} for r, c in matches]
 
-    elif format_type == "llama-3.1":
-        if full_text.startswith("<|begin_of_text|>"):
-            full_text = full_text[len("<|begin_of_text|>") :]
+    if format_type == "llama-3.1":
+        full_text = full_text.removeprefix("<|begin_of_text|>")
         pattern = re.compile(
             r"<\|start_header_id\|>(system|user|assistant)<\|end_header_id\|>\n\n(.*?)(?:<\|eot_id\|>|$)",
             re.DOTALL,
@@ -112,8 +116,8 @@ def strip_messages(prompt: str, target: str, format_type: str) -> list[dict[str,
         matches = pattern.findall(full_text)
         return [{"role": r, "content": c} for r, c in matches]
 
-    else:
-        raise ValueError(f"Unsupported format_type: {format_type}")
+    msg = f"Unsupported format_type: {format_type}"
+    raise ValueError(msg)
 
 
 class TaskTemplate:
@@ -162,7 +166,9 @@ class ClassificationTemplate(TaskTemplate):
             )
         if self.text_key is None:
             self.text_key = _find_key(
-                keys, ["text", "input", "sentence", "document"], exclude=[self.label_key]
+                keys,
+                ["text", "input", "sentence", "document"],
+                exclude=[self.label_key],
             )
             if self.text_key is None:
                 non_label_keys = [k for k in keys if k != self.label_key]
@@ -220,7 +226,9 @@ class SummarisationTemplate(TaskTemplate):
             )
         if self.document_key is None:
             self.document_key = _find_key(
-                keys, ["document", "article", "text", "context", "body"], exclude=[self.summary_key]
+                keys,
+                ["document", "article", "text", "context", "body"],
+                exclude=[self.summary_key],
             )
             if self.document_key is None:
                 non_summary_keys = [k for k in keys if k != self.summary_key]
@@ -274,7 +282,9 @@ class QATemplate(TaskTemplate):
             self.answer_key = _find_key(keys, ["answer", "reply", "a", "response"]) or "answer"
         if self.question_key is None:
             self.question_key = _find_key(
-                keys, ["question", "query", "q", "prompt"], exclude=[self.answer_key]
+                keys,
+                ["question", "query", "q", "prompt"],
+                exclude=[self.answer_key],
             )
             if self.question_key is None:
                 non_answer_keys = [k for k in keys if k != self.answer_key]
@@ -356,14 +366,18 @@ class InstructionTemplate(TaskTemplate):
             self.response_key = _find_key(keys, ["response", "output"]) or "response"
         if self.instruction_key is None:
             self.instruction_key = _find_key(
-                keys, ["instruction", "prompt"], exclude=[self.response_key]
+                keys,
+                ["instruction", "prompt"],
+                exclude=[self.response_key],
             )
             if self.instruction_key is None:
                 non_response_keys = [k for k in keys if k != self.response_key]
                 self.instruction_key = non_response_keys[0] if non_response_keys else "instruction"
         if self.input_key is None:
             self.input_key = _find_key(
-                keys, ["input"], exclude=[self.instruction_key, self.response_key]
+                keys,
+                ["input"],
+                exclude=[self.instruction_key, self.response_key],
             )
 
     def render(self, record: dict[str, Any], format_type: str) -> tuple[str, str]:
@@ -445,7 +459,7 @@ class ChatTemplate(TaskTemplate):
         role_key = "role"
         content_key = "content"
         if raw_msgs and isinstance(raw_msgs[0], dict):
-            keys = {k.lower() for k in raw_msgs[0].keys()}
+            keys = {k.lower() for k in raw_msgs[0]}
             if "from" in keys and "value" in keys:
                 role_key = "from"
                 content_key = "value"
@@ -511,7 +525,7 @@ class ChatTemplate(TaskTemplate):
                 {
                     self._role_key: orig_role,
                     self._content_key: c,
-                }
+                },
             )
 
         msg_key = self.messages_key or "messages"
@@ -532,19 +546,20 @@ def get_template(task_type: str, **kwargs: Any) -> TaskTemplate:
     -------
     TaskTemplate
         A task template instance.
+
     """
     if task_type == CLASSIFICATION:
         return ClassificationTemplate(**kwargs)
-    elif task_type == SUMMARISATION:
+    if task_type == SUMMARISATION:
         return SummarisationTemplate(**kwargs)
-    elif task_type == QA:
+    if task_type == QA:
         return QATemplate(**kwargs)
-    elif task_type == INSTRUCTION:
+    if task_type == INSTRUCTION:
         return InstructionTemplate(**kwargs)
-    elif task_type == CHAT:
+    if task_type == CHAT:
         return ChatTemplate(**kwargs)
-    else:
-        raise ValueError(f"Unsupported task_type: {task_type}")
+    msg = f"Unsupported task_type: {task_type}"
+    raise ValueError(msg)
 
 
 def render_record(
@@ -570,6 +585,7 @@ def render_record(
     -------
     tuple[str, str]
         A tuple of (prompt, target).
+
     """
     template = get_template(task_type, **kwargs)
     return template.render(record, format_type)
@@ -601,6 +617,7 @@ def strip_record(
     -------
     dict[str, Any]
         The reconstructed record.
+
     """
     template = get_template(task_type, **kwargs)
     return template.strip(prompt, target, format_type)

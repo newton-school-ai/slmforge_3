@@ -7,6 +7,11 @@ from .detector import (
     SUMMARISATION,
     detect_task,
 )
+from .metrics import (
+    get_metric_suite,
+    register_metric,
+    set_task_suite,
+)
 from .templates import (
     ChatTemplate,
     ClassificationTemplate,
@@ -33,7 +38,10 @@ __all__ = [
     "SummarisationTemplate",
     "TaskTemplate",
     "detect_task",
+    "get_metric_suite",
     "get_template",
+    "register_metric",
     "render_record",
+    "set_task_suite",
     "strip_record",
 ]

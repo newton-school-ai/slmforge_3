@@ -31,7 +31,7 @@ def build(
 
 
 @app.command()
-def eval(build_id: str) -> None:  # noqa: A002
+def eval(build_id: str) -> None:
     """Re-run eval on an existing build."""
     typer.echo(f"eval: not yet implemented (M7). build_id={build_id}")
 

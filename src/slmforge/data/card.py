@@ -1,5 +1,4 @@
-"""
-src/slmforge/data/card.py
+"""src/slmforge/data/card.py.
 ==========================
 Auto-generate a Markdown dataset card for a built ``DatasetDict``.
 
@@ -9,16 +8,17 @@ anyone inspecting the dataset can reproduce it exactly.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Any, Dict, List
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 
-import datasets
+if TYPE_CHECKING:
+    import datasets
 
-from slmforge.data.sources.base import Source
+    from slmforge.data.sources.base import Source
 
 
 def generate_card(
-    sources: List[Source],
+    sources: list[Source],
     dataset_dict: datasets.DatasetDict,
     seed: int,
 ) -> str:
@@ -37,9 +37,10 @@ def generate_card(
     -------
     str
         A complete Markdown document.
+
     """
     total = sum(len(dataset_dict[split]) for split in dataset_dict)
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    timestamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S UTC")
 
     lines: list[str] = []
 
@@ -72,7 +73,7 @@ def generate_card(
     lines.append("|---|------|-----------|---------|---------|")
 
     for idx, src in enumerate(sources, start=1):
-        meta: Dict[str, Any] = src.metadata()
+        meta: dict[str, Any] = src.metadata()
         src_type = meta.get("type", "unknown")
         src_id = meta.get("id", meta.get("path", "n/a"))
         src_size = meta.get("size", "n/a")
@@ -87,7 +88,7 @@ def generate_card(
     lines.append(
         f"This dataset was split deterministically using seed **{seed}**.  "
         "Re-running `DatasetBuilder.build()` with the same sources and seed "
-        "will produce identical train / val / eval splits."
+        "will produce identical train / val / eval splits.",
     )
     lines.append("")
 

@@ -1,5 +1,4 @@
-"""
-src/slmforge/data/preview.py
+"""src/slmforge/data/preview.py.
 ============================
 Sample-preview helper for SLMForge.
 
@@ -10,9 +9,9 @@ supported data source without loading the entire dataset into memory.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
-from slmforge.data.ingest import load, detect_format
+from slmforge.data.ingest import detect_format, load
 
 _DEFAULT_N = 5
 
@@ -21,7 +20,7 @@ def preview(
     path: str | Path,
     n: int = _DEFAULT_N,
     fmt: str | None = None,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Return the first *n* records from *path*.
 
     Parameters
@@ -44,11 +43,13 @@ def preview(
     >>> records = preview("my_data.jsonl")          # first 5 records
     >>> records = preview("my_data.csv", n=10)      # first 10 records
     >>> records = preview("/data/txts/", n=3)       # first 3 txt files
+
     """
     if n < 1:
-        raise ValueError(f"n must be >= 1, got {n}")
+        msg = f"n must be >= 1, got {n}"
+        raise ValueError(msg)
 
-    records: List[Dict[str, Any]] = []
+    records: list[dict[str, Any]] = []
     for record in load(path, fmt=fmt):
         records.append(record)
         if len(records) >= n:
@@ -57,7 +58,7 @@ def preview(
     return records
 
 
-def preview_info(path: str | Path, n: int = _DEFAULT_N) -> Dict[str, Any]:
+def preview_info(path: str | Path, n: int = _DEFAULT_N) -> dict[str, Any]:
     """Return a summary dict containing format, record count, and sample rows.
 
     Useful for UI display / API responses.
@@ -73,6 +74,7 @@ def preview_info(path: str | Path, n: int = _DEFAULT_N) -> Dict[str, Any]:
     -------
     Dict[str, Any]
         ``{"path": ..., "format": ..., "n_returned": ..., "records": [...]}``
+
     """
     p = Path(path)
     fmt = detect_format(p)

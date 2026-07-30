@@ -1,26 +1,27 @@
 import pytest
+
 from slmforge.data.sources import (
-    get_source_adapter,
-    SyntheticSource,
-    PublicHFSource,
-    LocalSource,
     InternalSource,
+    LocalSource,
+    PublicHFSource,
+    SyntheticSource,
+    get_source_adapter,
 )
 
 
-def test_registry_valid_types():
+def test_registry_valid_types() -> None:
     assert get_source_adapter("synthetic") == SyntheticSource
     assert get_source_adapter("public") == PublicHFSource
     assert get_source_adapter("local") == LocalSource
     assert get_source_adapter("internal") == InternalSource
 
 
-def test_registry_rejects_unknown_types():
+def test_registry_rejects_unknown_types() -> None:
     with pytest.raises(ValueError, match="Unknown source type: unknown"):
         get_source_adapter("unknown")
 
 
-def test_internal_raises_not_implemented():
+def test_internal_raises_not_implemented() -> None:
     source = InternalSource()
     with pytest.raises(NotImplementedError, match="Internal sources are not yet supported"):
         source.metadata()
@@ -30,7 +31,7 @@ def test_internal_raises_not_implemented():
         next(source.iter_records())
 
 
-def test_adapters_yield_same_shape():
+def test_adapters_yield_same_shape() -> None:
     sources = [SyntheticSource(), PublicHFSource(), LocalSource()]
 
     for source in sources:

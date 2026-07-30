@@ -1,6 +1,5 @@
-"""
-feature/issue-10-himani
-src/slmforge/task/detector.py
+"""feature/issue-10-himani
+src/slmforge/task/detector.py.
 
 
 Task detector v1 for automatically classifying datasets into canonical task types:
@@ -42,7 +41,7 @@ Heuristics Overview
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +80,6 @@ INSTRUCTION_VERBS = {
     "predict",
     "correct",
     "rewrite",
-    "extract",
 }
 
 # Question words indicative of QA
@@ -110,10 +108,11 @@ QUESTION_WORDS = {
 
 
 def _get_keys_and_samples(
-    records: Any, max_samples: int = 100
-) -> Tuple[List[str], List[Dict[str, Any]]]:
+    records: Any,
+    max_samples: int = 100,
+) -> tuple[list[str], list[dict[str, Any]]]:
     """Helper to extract unique keys and a subset of records from records input."""
-    samples: List[Dict[str, Any]] = []
+    samples: list[dict[str, Any]] = []
     keys: set[str] = set()
 
     # If it is a Hugging Face Dataset or similar that provides column_names
@@ -150,7 +149,7 @@ def _get_keys_and_samples(
     return list(keys), samples
 
 
-def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
+def detect_task(records: list[dict[str, Any]] | Any) -> dict[str, Any]:
     """Automatically detect the task type of a dataset of records.
 
     Parameters
@@ -166,6 +165,7 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
         - "confidence": The confidence score (float between 0.0 and 1.0).
         - "alternatives": A list of sorted (task_type, confidence) tuples of alternatives.
         - "fallback_prompt": A string explaining recommendations if confidence is low, else None.
+
     """
     keys, samples = _get_keys_and_samples(records)
 
@@ -178,7 +178,7 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
         }
 
     # Initialize scores for all task types
-    scores: Dict[str, float] = {
+    scores: dict[str, float] = {
         CHAT: 0.0,
         QA: 0.0,
         SUMMARISATION: 0.0,
@@ -203,7 +203,7 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
             if isinstance(val, list) and len(val) > 0:
                 elem = val[0]
                 if isinstance(elem, dict):
-                    elem_keys = {ek.lower() for ek in elem.keys()}
+                    elem_keys = {ek.lower() for ek in elem}
                     # OpenAI (role, content), ShareGPT (from, value), or speaker/text
                     if (
                         {"role", "content"}.issubset(elem_keys)
@@ -261,7 +261,7 @@ def detect_task(records: List[Dict[str, Any]] | Any) -> Dict[str, Any]:
             starts_with_q_word = sum(
                 1
                 for v in q_str_vals
-                if any(v.startswith(w + " ") or v.startswith(w + "'") for w in QUESTION_WORDS)
+                if any(v.startswith((w + " ", w + "'")) for w in QUESTION_WORDS)
             )
 
             total_q_checks = len(q_vals)

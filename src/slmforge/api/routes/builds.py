@@ -21,7 +21,7 @@ async def get_build(id: int):
 
 
 @router.websocket("/builds/{id}/stream")
-async def stream(websocket: WebSocket, id: int):
+async def stream(websocket: WebSocket, id: int) -> None:
     await websocket.accept()
     await websocket.send_json({"message": "Streaming started"})
     await websocket.close()

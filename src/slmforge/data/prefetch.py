@@ -16,7 +16,6 @@ DATASET_ALIASES = {
 
 def prefetch(dataset_id: str) -> Path:
     """Download and cache a public dataset locally."""
-
     dataset_path = CACHE_DIR / dataset_id
     card_path = dataset_path / "dataset_card.md"
 

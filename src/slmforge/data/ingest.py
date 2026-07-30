@@ -1,5 +1,4 @@
-"""
-src/slmforge/data/ingest.py
+"""src/slmforge/data/ingest.py.
 ===========================
 Multi-format ingestion layer for SLMForge.
 
@@ -26,7 +25,10 @@ import csv
 import json
 import logging
 from pathlib import Path
-from typing import Any, Dict, Iterator
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +99,7 @@ def detect_format(path: str | Path) -> str:
     ------
     ValueError
         When the format cannot be determined.
+
     """
     p = Path(path)
 
@@ -137,10 +140,13 @@ def detect_format(path: str | Path) -> str:
     except OSError:
         pass
 
-    raise ValueError(
+    msg = (
         f"Cannot determine format for '{path}'. "
         "Provide a file with a recognised extension (.jsonl, .csv, .parquet) "
         "or a directory of .txt files."
+    )
+    raise ValueError(
+        msg,
     )
 
 
@@ -149,7 +155,7 @@ def detect_format(path: str | Path) -> str:
 # ---------------------------------------------------------------------------
 
 
-def read_jsonl(path: str | Path) -> Iterator[Dict[str, Any]]:
+def read_jsonl(path: str | Path) -> Iterator[dict[str, Any]]:
     """Yield one record per line from a JSONL file.
 
     Blank lines are skipped; malformed lines raise ``json.JSONDecodeError``.
@@ -162,7 +168,7 @@ def read_jsonl(path: str | Path) -> Iterator[Dict[str, Any]]:
                 yield json.loads(raw)
 
 
-def read_csv(path: str | Path) -> Iterator[Dict[str, Any]]:
+def read_csv(path: str | Path) -> Iterator[dict[str, Any]]:
     """Yield one dict-per-row from a CSV file (header row required)."""
     p = Path(path)
     with p.open(encoding="utf-8", newline="") as fh:
@@ -171,7 +177,7 @@ def read_csv(path: str | Path) -> Iterator[Dict[str, Any]]:
             yield dict(row)
 
 
-def read_parquet(path: str | Path) -> Iterator[Dict[str, Any]]:
+def read_parquet(path: str | Path) -> Iterator[dict[str, Any]]:
     """Yield one dict-per-row from a Parquet file using pyarrow."""
     import pyarrow.parquet as pq  # lazy import - not required for other formats
 
@@ -184,7 +190,7 @@ def read_parquet(path: str | Path) -> Iterator[Dict[str, Any]]:
             yield {k: batch_dict[k][i] for k in keys}
 
 
-def read_txt_folder(path: str | Path) -> Iterator[Dict[str, Any]]:
+def read_txt_folder(path: str | Path) -> Iterator[dict[str, Any]]:
     """Yield ``{"text": <file_content>}`` for every ``.txt`` file in *path*.
 
     Files are processed in sorted order for reproducibility.
@@ -192,7 +198,8 @@ def read_txt_folder(path: str | Path) -> Iterator[Dict[str, Any]]:
     """
     p = Path(path)
     if not p.is_dir():
-        raise ValueError(f"Expected a directory, got: {path}")
+        msg = f"Expected a directory, got: {path}"
+        raise ValueError(msg)
 
     txt_files = sorted(p.glob("*.txt"))
     for txt_file in txt_files:
@@ -212,7 +219,7 @@ _FORMAT_READERS = {
 }
 
 
-def load(path: str | Path, fmt: str | None = None) -> Iterator[Dict[str, Any]]:
+def load(path: str | Path, fmt: str | None = None) -> Iterator[dict[str, Any]]:
     """Load *path* and return a normalised record stream.
 
     Parameters
@@ -233,26 +240,28 @@ def load(path: str | Path, fmt: str | None = None) -> Iterator[Dict[str, Any]]:
     ------
     ValueError
         On unknown path or format.
+
     """
     if fmt is None:
         fmt = detect_format(path)
 
     reader = _FORMAT_READERS.get(fmt)
     if reader is None:
-        raise ValueError(f"Unsupported format '{fmt}'. " f"Choose from: {list(_FORMAT_READERS)}")
+        msg = f"Unsupported format '{fmt}'. Choose from: {list(_FORMAT_READERS)}"
+        raise ValueError(msg)
 
     yield from reader(path)
 
 
 __all__ = [
-    "FORMAT_JSONL",
     "FORMAT_CSV",
+    "FORMAT_JSONL",
     "FORMAT_PARQUET",
     "FORMAT_TXT_FOLDER",
     "detect_format",
-    "read_jsonl",
+    "load",
     "read_csv",
+    "read_jsonl",
     "read_parquet",
     "read_txt_folder",
-    "load",
 ]

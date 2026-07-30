@@ -238,6 +238,7 @@ docker compose up -d redis
 - vLLM and the LoRA harness pick the device automatically. If running outside SLMForge, use:
   ```python
   import torch
+
   if torch.cuda.is_available():
       device = torch.device("cuda")
   elif torch.backends.mps.is_available():

@@ -1,9 +1,8 @@
-from typing import Type
 from .base import Source
-from .synthetic import SyntheticSource
-from .public import PublicHFSource
-from .local import LocalSource
 from .internal import InternalSource
+from .local import LocalSource
+from .public import PublicHFSource
+from .synthetic import SyntheticSource
 
 _REGISTRY = {
     "synthetic": SyntheticSource,
@@ -13,7 +12,8 @@ _REGISTRY = {
 }
 
 
-def get_source_adapter(source_type: str) -> Type[Source]:
+def get_source_adapter(source_type: str) -> type[Source]:
     if source_type not in _REGISTRY:
-        raise ValueError(f"Unknown source type: {source_type}")
+        msg = f"Unknown source type: {source_type}"
+        raise ValueError(msg)
     return _REGISTRY[source_type]

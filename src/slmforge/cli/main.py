@@ -23,11 +23,42 @@ def init() -> None:
 
 @app.command()
 def build(
-    auto: bool = typer.Option(False, "--auto", help="Skip all confirmation prompts."),
-    recipe: str | None = typer.Option(None, "--recipe", help="Run a bundled recipe by name."),
+    auto: bool = typer.Option(
+        False,
+        "--auto",
+        help="Skip all confirmation prompts.",
+    ),
+    recipe: str | None = typer.Option(
+        None,
+        "--recipe",
+        help="Run a bundled recipe by name.",
+    ),
+    task: str | None = typer.Option(
+        None,
+        "--task",
+        help="Override the automatically detected task type.",
+    ),
+    base: str | None = typer.Option(
+        None,
+        "--base",
+        help="Override the automatically selected base model.",
+    ),
+    template: str | None = typer.Option(
+        None,
+        "--template",
+        help="Override the automatically selected prompt template.",
+    ),
 ) -> None:
     """Discover data in cwd, detect task, fine-tune, eval, and print usage doc."""
-    typer.echo(f"build: not yet implemented (M7). auto={auto} recipe={recipe}")
+
+    typer.echo(
+        "build: not yet implemented (M7).\n"
+        f"auto={auto}\n"
+        f"recipe={recipe}\n"
+        f"task={task}\n"
+        f"base={base}\n"
+        f"template={template}"
+    )
 
 
 @app.command()

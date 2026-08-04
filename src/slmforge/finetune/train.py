@@ -5,8 +5,6 @@ CLI entrypoint for LoRA fine-tuning.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import typer
 
 from slmforge.finetune.lora import train_lora

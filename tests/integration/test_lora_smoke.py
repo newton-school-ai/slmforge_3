@@ -61,15 +61,16 @@ def test_train_tiny_adapter_end_to_end(tiny_dataset: datasets.DatasetDict, tmp_p
 
     assert Path(adapter_path).exists()
     assert (Path(adapter_path) / "adapter_config.json").exists()
-    adapter_weights_exist = (
-        (Path(adapter_path) / "adapter_model.safetensors").exists()
-        or (Path(adapter_path) / "adapter_model.bin").exists()
-    )
+    adapter_weights_exist = (Path(adapter_path) / "adapter_model.safetensors").exists() or (
+        Path(adapter_path) / "adapter_model.bin"
+    ).exists()
     assert adapter_weights_exist, "Adapter weights file not found!"
 
 
 @pytest.mark.gpu
-def test_adapter_loads_and_generates_token(tiny_dataset: datasets.DatasetDict, tmp_path: Path) -> None:
+def test_adapter_loads_and_generates_token(
+    tiny_dataset: datasets.DatasetDict, tmp_path: Path
+) -> None:
     """Test that saved adapter loads onto base model and generates tokens."""
     base_model = "sshleifer/tiny-gpt2"
     out_dir = tmp_path / "adapter_gen"

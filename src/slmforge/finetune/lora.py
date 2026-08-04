@@ -11,7 +11,6 @@ from typing import Any
 
 import datasets
 import torch
-import transformers
 from peft import LoraConfig, TaskType, get_peft_model
 from transformers import (
     AutoModelForCausalLM,
@@ -42,7 +41,7 @@ def _resolve_base_hf_id(base: str | dict[str, Any]) -> str:
 
 def _format_record_to_text(example: dict[str, Any]) -> str:
     """Format a dataset record into a plain text string for language modeling."""
-    if "text" in example and example["text"]:
+    if example.get("text"):
         return str(example["text"])
 
     if "prompt" in example and "target" in example:
@@ -176,7 +175,9 @@ def train_lora(
     tokenized_train_ds = train_ds.map(
         tokenize_fn,
         batched=True,
-        remove_columns=[c for c in train_ds.column_names if c not in ("input_ids", "labels", "attention_mask")],
+        remove_columns=[
+            c for c in train_ds.column_names if c not in ("input_ids", "labels", "attention_mask")
+        ],
     )
 
     tokenized_eval_ds = None
@@ -184,7 +185,11 @@ def train_lora(
         tokenized_eval_ds = eval_ds.map(
             tokenize_fn,
             batched=True,
-            remove_columns=[c for c in eval_ds.column_names if c not in ("input_ids", "labels", "attention_mask")],
+            remove_columns=[
+                c
+                for c in eval_ds.column_names
+                if c not in ("input_ids", "labels", "attention_mask")
+            ],
         )
 
     # Configure PEFT LoRA

@@ -58,3 +58,7 @@ target-version = "py311"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "gpu: mark test as requiring GPU/heavy training",
+]
+

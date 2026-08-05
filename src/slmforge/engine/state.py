@@ -11,6 +11,12 @@ class Build(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
+    build_id = Column(String, unique=True, index=True, nullable=True)
+    checkpoint_path = Column(String, nullable=True)
+    seed = Column(Integer, nullable=True)
+    epochs_completed = Column(Integer, nullable=True)
+    total_epochs = Column(Integer, nullable=True)
+    status = Column(String, nullable=True)
 
 
 class Run(Base):

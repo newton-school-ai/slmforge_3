@@ -136,16 +136,38 @@ def train_lora(
     else:
         raise TypeError(f"Unsupported dataset type: {type(dataset)}")
 
+    # Check if QLoRA 4-bit quantisation should be auto-selected for 8B-class models
+    use_qlora = training_dict.get("use_qlora", False)
+    if not use_qlora:
+        from slmforge.finetune.qlora import is_8b_class
+
+        use_qlora = is_8b_class(base)
+
+    quantization_config = None
+    if use_qlora and torch.cuda.is_available():
+        try:
+            from slmforge.finetune.qlora import get_qlora_config
+
+            quantization_config = get_qlora_config()
+        except (ImportError, AttributeError, RuntimeError):
+            quantization_config = None
+
     # Load tokenizer and base model
     tokenizer = AutoTokenizer.from_pretrained(hf_id, trust_remote_code=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.pad_token_id = tokenizer.eos_token_id
 
-    model = AutoModelForCausalLM.from_pretrained(
-        hf_id,
-        trust_remote_code=True,
-    )
+    model_kwargs: dict[str, Any] = {"trust_remote_code": True}
+    if quantization_config is not None:
+        model_kwargs["quantization_config"] = quantization_config
+
+    model = AutoModelForCausalLM.from_pretrained(hf_id, **model_kwargs)
+
+    if quantization_config is not None:
+        from slmforge.finetune.qlora import prepare_qlora_model
+
+        model = prepare_qlora_model(model)
 
     max_seq_len = training_dict.get("max_seq_length", 512)
 
